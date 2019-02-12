@@ -1,1 +1,183 @@
-Hello world
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Zawody</title>
+  
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/5.8.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.8.2/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.8.2/firebase-database.js"></script>
+    
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="style.css">
+  
+    <script src="firebaseInit.js"></script>
+  </head>
+  <body class="text-center">
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <a class="navbar-brand" href="#">Wrestling</a>
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Contact</a>
+          </li>
+        </ul>
+        <form class="form-inline mt-2 mt-md-0">
+          <label id="userNameLbl" style="color:white; padding-right:20px; font:bold;">User Name</label>
+          <button id="signoutBtn" class="btn btn-success my-2 my-sm-0" type="submit">Sign out</button>
+        </form>
+      </div>
+    </nav>
+
+    <form id="signinForm" class="form-signin">
+      <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+      <label for="emailInput" class="sr-only">Email address</label>
+      <input type="email" id="emailInput" class="form-control" placeholder="Email address" required autofocus>
+      <label for="passwordInput" class="sr-only">Password</label>
+      <input type="password" id="passwordInput" class="form-control" placeholder="Password" required>
+      <div class="checkbox mb-3">
+        <label>
+          <input type="checkbox" value="remember-me"> Remember me
+        </label>
+      </div>
+      <button id="signinBtn" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+      <p class="mt-5 mb-3 text-muted">&copy; 2019</p>
+    </form>
+    
+    <form id="registerForm" class="form-signin d-none">
+      <h1 class="h3 mb-3 font-weight-normal">Please sign up</h1>
+      <label for="emailInput" class="sr-only">Email address</label>
+      <input type="email" id="emailInput" class="form-control" placeholder="Email address" required autofocus>
+      <label for="passwordInput" class="sr-only">Password</label>
+      <input type="password" id="passwordInput" class="form-control" placeholder="Password" required>
+      <label for="confirmPasswordInput" class="sr-only">Confirm password</label>
+      <input type="password" id="confirmPasswordInput" class="form-control" placeholder="Confirm password" required>
+      <div class="checkbox mb-3">
+        <label>
+          <input type="checkbox" value="remember-me"> Remember me
+        </label>
+      </div>
+      <button id="signupBtn" class="btn btn-lg btn-primary btn-block" type="submit">Sign up</button>
+      <p class="mt-5 mb-3 text-muted">&copy; 2019</p>
+    </form>
+  
+    <script>
+      firebase.database();
+      
+      
+      /**
+       * Handles the sign in button press.
+       */
+      function handleSignIn() {
+        var email = document.getElementById('emailInput').value;
+        var password = document.getElementById('passwordInput').value;
+        if (email.length < 4) {
+          alert('Please enter an email address.');
+          return;
+        }
+        if (password.length < 4) {
+          alert('Please enter a password.');
+          return;
+        }
+        // Sign in with email and pass.
+        // [START authwithemail]
+        firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
+          // Handle Errors here.
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          // [START_EXCLUDE]
+          if (errorCode === 'auth/wrong-password') {
+            alert('Wrong password.');
+          } else {
+            alert(errorMessage);
+          }
+          console.log(error);
+          document.getElementById('signinBtn').disabled = false;
+          // [END_EXCLUDE]
+        });
+        // [END authwithemail]
+      }
+      
+      /**
+       * Handles the sign out
+       */
+      function handleSignOut() {
+        // [START signout]
+        firebase.auth().signOut();
+        // [END signout]
+      }
+      
+      /**
+       * Handles the sign up button press.
+       */
+      function handleSignUp() {
+        var email = document.getElementById('emailInput').value;
+        var password = document.getElementById('passwordInput').value;
+        var confirmPassword = document.getElementById('confirmPasswordInput').value;
+        if (email.length < 4) {
+          alert('Please enter an email address.');
+          return;
+        }
+        if (password.length < 4) {
+          alert('Please enter a password.');
+          return;
+        }
+        if (password !== confirmPassword) {
+          alert('Passwords do not match.');
+          return;
+        }
+        
+        // Sign in with email and pass.
+        // [START createwithemail]
+        firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {
+          // Handle Errors here.
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          // [START_EXCLUDE]
+          if (errorCode == 'auth/weak-password') {
+            alert('The password is too weak.');
+          } else {
+            alert(errorMessage);
+          }
+          console.log(error);
+          // [END_EXCLUDE]
+        });
+        // [END createwithemail]
+      }
+      
+      function initApp(){
+        firebase.auth().onAuthStateChanged(function(user) {
+          if (user) {
+            document.getElementById('signinBtn').disabled = true;
+            document.getElementById('userNameLbl').textContent = user.email;
+            document.getElementById('signoutBtn').textContent = "Sign out";
+          }
+          else {
+            document.getElementById('signinBtn').disabled = false;
+            document.getElementById('userNameLbl').textContent = "Unknown";
+            document.getElementById('signoutBtn').textContent = "Sign in";
+          }
+        });
+      
+        document.getElementById('signinBtn').addEventListener('click', handleSignIn, false);
+        document.getElementById('signupBtn').addEventListener('click', handleSignUp, false);
+        document.getElementById('signoutBtn').addEventListener('click', handleSignOut, false);
+        //document.getElementById('quickstart-password-reset').addEventListener('click', sendPasswordReset, false);
+      }
+      
+      window.onload = function() {
+        initApp();
+      }
+    </script>
+  </body>
+</html>
